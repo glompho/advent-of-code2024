@@ -82,10 +82,6 @@ defmodule AdventOfCode.Day16 do
           # Found a route
           {:ok, [{new_route, score}], new_visited}
 
-        nil ->
-          # Out of bounds
-          {:error, :out_of_bounds}
-
         _ ->
           find_routes({x, y}, {dx, dy}, score, grid, new_visited, new_route)
       end
@@ -120,7 +116,7 @@ defmodule AdventOfCode.Day16 do
   def part2(input) do
     {grid, start_pos, _end_pos} = parse(input)
 
-    {:ok, routes, visited} =
+    {:ok, routes, _visited} =
       find_routes(start_pos, {1, 0}, 0, grid, %{}, [start_pos])
 
     {_route, min} =
