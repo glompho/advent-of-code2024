@@ -83,39 +83,23 @@ defmodule AdventOfCode.Day17 do
     end
   end
 
-  def run_program({a, b, c}, pointer, output, program, cache) do
-    cond do
-      pointer >= length(program) ->
-        final_output =
-          output
-          |> Enum.map(&Integer.to_string/1)
-          |> Enum.join(",")
+  def run_program({a, b, c}, pointer, output, program) do
+    if pointer >= length(program) do
+      final_output =
+        output
+        |> Enum.map(&Integer.to_string/1)
+        |> Enum.join(",")
 
-        {{a, b, c}, pointer, final_output, cache}
+      {{a, b, c}, pointer, final_output}
+    else
+      [op, n] = Enum.slice(program, pointer, 2)
+      # IO.inspect({op, n, a, b, c, pointer})
 
-      Map.has_key?(cache, {{a, b, c}, pointer, output, program}) ->
-        "hit cache"
-        Map.get(cache, {{a, b, c}, pointer, output, program})
-
-      true ->
-        [op, n] = Enum.slice(program, pointer, 2)
-        # IO.inspect({op, n, a, b, c, pointer})
-
-        result =
-          {{fa, fb, fc}, fpointer, ffinal_output, fcache} =
-          case one_command(op, n, a, b, c, pointer) do
-            {:jump, new_p} ->
-              run_program({a, b, c}, new_p, output, program, cache)
-
-            {:output, new_o} ->
-              run_program({a, b, c}, pointer + 2, output ++ [new_o], program, cache)
-
-            {na, nb, nc} ->
-              run_program({na, nb, nc}, pointer + 2, output, program, cache)
-          end
-
-        {{fa, fb, fc}, fpointer, ffinal_output,
-         Map.put(fcache, {{a, b, c}, pointer, output, program}, result)}
+      case one_command(op, n, a, b, c, pointer) do
+        {:jump, new_p} -> run_program({a, b, c}, new_p, output, program)
+        {:output, new_o} -> run_program({a, b, c}, pointer + 2, output ++ [new_o], program)
+        {na, nb, nc} -> run_program({na, nb, nc}, pointer + 2, output, program)
+      end
     end
   end
 
@@ -138,7 +122,7 @@ defmodule AdventOfCode.Day17 do
   def part1(input) do
     [a, b, c | program] = parse(input)
 
-    {{_, _, _}, _, output, _cache} = run_program({a, b, c}, 0, [], program, %{})
+    {{_, _, _}, _, output} = run_program({a, b, c}, 0, [], program)
 
     output
   end
@@ -149,17 +133,11 @@ defmodule AdventOfCode.Day17 do
     IO.inspect(program_string)
 
     n =
-      Enum.reduce_while(Stream.iterate(0, &(&1 + 1)), %{}, fn x, cache ->
-        {{_, _, _}, _, output, new_cache} = run_program({x, b, c}, 0, [], program, cache)
-
-        if output != program_string do
-          {:cont, new_cache}
-        else
-          {:halt, x}
-          # IO.inspect({output, program_string, x})
-        end
+      Enum.take_while(Stream.iterate(0, &(&1 + 1)), fn x ->
+        {{_, _, _}, _, output} = run_program({x, b, c}, 0, [], program)
+        output != program_string
+        # IO.inspect({output, program_string, x})
       end)
-
-    # |> Enum.count()
+      |> Enum.count()
   end
 end
