@@ -1,4 +1,23 @@
 defmodule AdventOfCode.Day16 do
+  def draw_grid(map) do
+    [max_x, max_y] =
+      Map.keys(map)
+      |> Enum.unzip()
+      |> Tuple.to_list()
+      |> Enum.map(&Enum.max/1)
+
+    for y <- Range.new(0, max_y) do
+      Enum.map(Range.new(0, max_x), fn x ->
+        cond do
+          Map.has_key?(map, {x, y}) -> map[{x, y}]
+          true -> " "
+        end
+      end)
+      |> Enum.join()
+    end
+    |> Enum.join("\n")
+  end
+
   def parse(input) do
     input
     |> String.split(["\n", "\r"], trim: true)
@@ -47,7 +66,7 @@ defmodule AdventOfCode.Day16 do
     key = {x, y, dx, dy}
     # IO.inspect(Map.get(grid, {x, y}))
 
-    if Map.get(visited, key, 10_00000) <= score do
+    if Map.get(visited, key, 10_00000) < score do
       # Prune this path
       {:error, :already_visited}
     else
@@ -76,7 +95,7 @@ defmodule AdventOfCode.Day16 do
   def part1(input) do
     {grid, start_pos, _end_pos} = parse(input)
 
-    draw_grid(grid) |> IO.puts()
+    # draw_grid(grid) |> IO.puts()
 
     {:ok, routes, visited} =
       find_routes(start_pos, {1, 0}, 0, grid, %{}, [start_pos])
@@ -88,34 +107,30 @@ defmodule AdventOfCode.Day16 do
     IO.puts("\n")
     IO.puts(length(route))
 
-    Enum.reduce(Map.keys(visited), grid, fn {x, y, dx, dy}, grid ->
+    Enum.reduce(Map.keys(visited), grid, fn {x, y, _dx, _dy}, grid ->
       Map.put(grid, {x, y}, "X")
     end)
     |> draw_grid()
-    |> IO.puts()
+
+    # |> IO.puts()
 
     result
   end
 
-  def part2(_args) do
-  end
+  def part2(input) do
+    {grid, start_pos, _end_pos} = parse(input)
 
-  def draw_grid(map) do
-    [max_x, max_y] =
-      Map.keys(map)
-      |> Enum.unzip()
-      |> Tuple.to_list()
-      |> Enum.map(&Enum.max/1)
+    {:ok, routes, visited} =
+      find_routes(start_pos, {1, 0}, 0, grid, %{}, [start_pos])
 
-    for y <- Range.new(0, max_y) do
-      Enum.map(Range.new(0, max_x), fn x ->
-        cond do
-          Map.has_key?(map, {x, y}) -> map[{x, y}]
-          true -> " "
-        end
-      end)
-      |> Enum.join()
-    end
-    |> Enum.join("\n")
+    {_route, min} =
+      routes
+      |> Enum.min_by(fn {_route, score} -> score end)
+
+    routes
+    |> Enum.filter(fn {_route, score} -> score == min end)
+    |> Enum.flat_map(fn {route, _score} -> route end)
+    |> Enum.uniq()
+    |> Enum.count()
   end
 end
