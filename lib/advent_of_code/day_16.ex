@@ -26,27 +26,49 @@ defmodule AdventOfCode.Day16 do
       {{x, y}, {dy, -dx}, score + 1001}
     ]
 
-    possible_moves
-    |> Enum.flat_map(fn {{x, y}, {dx, dy}, score} ->
-      take_step({x + dx, y + dy}, {dx, dy}, score, grid, visited, route)
-    end)
+    {r, v} =
+      Enum.reduce(possible_moves, {[], visited}, fn {{x, y}, {dx, dy}, score},
+                                                    {routes, visited_acc} ->
+        take_step({x + dx, y + dy}, {dx, dy}, score, grid, visited_acc, route)
+        |> case do
+          {:ok, new_routes, new_visited} ->
+            {routes ++ new_routes, new_visited}
+
+          {:error, _} ->
+            {routes, visited_acc}
+        end
+      end)
+
+    {:ok, r, v}
   end
 
   def take_step({x, y}, {dx, dy}, score, grid, visited, route) do
-    # IO.inspect({{x, y}, grid[{x, y}], score, Map.get(visited, {x, y, dx, dy}, 10_000_000)})
+    # |> IO.inspect()
+    key = {x, y, dx, dy}
+    # IO.inspect(Map.get(grid, {x, y}))
 
-    if Map.get(visited, {x, y, dx, dy}, 10_0000) < score do
-      []
+    if Map.get(visited, key, 10_00000) <= score do
+      # Prune this path
+      {:error, :already_visited}
     else
-      new_visted = Map.put(visited, {x, y, dx, dy}, score)
+      new_visited = Map.put(visited, key, score)
       new_route = [{x, y} | route]
-      # new_grid = Map.put(grid, {x, y}, "X")
 
-      case grid[{x, y}] do
-        "#" -> []
-        "E" -> [{route, score}]
-        "." -> find_routes({x, y}, {dx, dy}, score, grid, new_visted, new_route)
-        "S" -> find_routes({x, y}, {dx, dy}, score, grid, new_visted, new_route)
+      case Map.get(grid, {x, y}) do
+        "#" ->
+          # Dead end
+          {:error, :wall}
+
+        "E" ->
+          # Found a route
+          {:ok, [{new_route, score}], new_visited}
+
+        nil ->
+          # Out of bounds
+          {:error, :out_of_bounds}
+
+        _ ->
+          find_routes({x, y}, {dx, dy}, score, grid, new_visited, new_route)
       end
     end
   end
@@ -54,20 +76,23 @@ defmodule AdventOfCode.Day16 do
   def part1(input) do
     {grid, start_pos, _end_pos} = parse(input)
 
+    draw_grid(grid) |> IO.puts()
+
+    {:ok, routes, visited} =
+      find_routes(start_pos, {1, 0}, 0, grid, %{}, [start_pos])
+
     {route, result} =
-      find_routes(start_pos, {1, 0}, 0, grid, %{start_pos => true}, [start_pos])
+      routes
       |> Enum.min_by(fn {_route, score} -> score end)
 
-    # IO.puts("\n")
-    # IO.puts(length(route))
+    IO.puts("\n")
+    IO.puts(length(route))
 
-    route_map =
-      Enum.reduce(route, grid, fn {x, y}, grid ->
-        Map.put(grid, {x, y}, "X")
-      end)
-      |> draw_grid()
-
-    # |> IO.puts()
+    Enum.reduce(Map.keys(visited), grid, fn {x, y, dx, dy}, grid ->
+      Map.put(grid, {x, y}, "X")
+    end)
+    |> draw_grid()
+    |> IO.puts()
 
     result
   end
