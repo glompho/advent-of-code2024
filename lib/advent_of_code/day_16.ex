@@ -96,12 +96,12 @@ defmodule AdventOfCode.Day16 do
     {:ok, routes, visited} =
       find_routes(start_pos, {1, 0}, 0, grid, %{}, [start_pos])
 
-    {route, result} =
+    {_route, result} =
       routes
       |> Enum.min_by(fn {_route, score} -> score end)
 
-    IO.puts("\n")
-    IO.puts(length(route))
+    # IO.puts("\n")
+    # IO.puts(length(route))
 
     Enum.reduce(Map.keys(visited), grid, fn {x, y, _dx, _dy}, grid ->
       Map.put(grid, {x, y}, "X")

@@ -13,11 +13,13 @@ defmodule AdventOfCode.Day17 do
   end
 
   def adv(n, a, b, c) do
+    # IO.inspect("#{a} DIV 2 ** #{combo(n, a, b, c)}")
     result = div(a, 2 ** combo(n, a, b, c))
     {result, b, c}
   end
 
   def bxl(n, a, b, c) do
+    # IO.inspect("B=#{b} XOR #{n}")
     result = Bitwise.bxor(b, n)
     {a, result, c}
   end
@@ -128,16 +130,21 @@ defmodule AdventOfCode.Day17 do
   end
 
   def part2(input) do
-    [a, b, c | program] = parse(input)
+    [_a, b, c | program] = parse(input)
     program_string = Enum.join(program, ",")
-    IO.inspect(program_string)
+    # IO.inspect(program_string)
+    start = 117_300
 
     n =
-      Enum.take_while(Stream.iterate(0, &(&1 + 1)), fn x ->
-        {{_, _, _}, _, output} = run_program({x, b, c}, 0, [], program)
+      Enum.take_while(Stream.iterate(start, &(&1 + 1)), fn x ->
+        {{_a, _b, _c}, _pointer, output} = run_program({x, b, c}, 0, [], program)
+
+        # IO.inspect({x, div(x, 8), output, program_string})
+        # IO.gets("")
         output != program_string
-        # IO.inspect({output, program_string, x})
       end)
-      |> Enum.count()
+      |> Enum.max()
+
+    n + 1
   end
 end

@@ -145,7 +145,7 @@ defmodule AdventOfCode.Day09 do
     |> Enum.map(&String.to_integer/1)
     |> Enum.chunk_every(2, 2)
     |> Enum.with_index()
-    |> IO.inspect()
+    # |> IO.inspect()
     |> Enum.reduce({{_files = %{}, _spaces = []}, _block_index = 0}, fn {[file_size, space_size],
                                                                          file_id},
                                                                         {{files, spaces},

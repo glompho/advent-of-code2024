@@ -79,9 +79,9 @@ defmodule AdventOfCode.Day12 do
 
   def find_edges([{x, y} | _rest] = edges, {dx, dy}, acc) do
     edge = find_edge(edges, {x, y}, {dx, dy})
-    IO.inspect(edges, label: "before")
-    IO.inspect(edge, lebel: "edge")
-    IO.inspect(edges -- edge, label: "after")
+    # IO.inspect(edges, label: "before")
+    # IO.inspect(edge, lebel: "edge")
+    # IO.inspect(edges -- edge, label: "after")
     # IO.inspect(edge, label: "{x,y} goes to edge")
     find_edges(edges -- edge, {dx, dy}, acc ++ [edge])
   end
@@ -123,9 +123,9 @@ defmodule AdventOfCode.Day12 do
 
     regions
     |> elem(0)
-    |> Enum.map(fn {name, {area, edges}} ->
+    |> Enum.map(fn {_name, {area, edges}} ->
       sides = count_sides(edges)
-      IO.inspect({name, sides})
+      # IO.inspect({name, sides})
 
       Enum.count(area) * sides
     end)
