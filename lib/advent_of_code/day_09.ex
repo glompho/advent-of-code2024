@@ -9,16 +9,16 @@ defmodule AdventOfCode.Day09 do
   end
 
   def part1(args) do
-    list = String.graphemes(String.trim(args))
+    list =
+      String.graphemes(String.trim(args))
+      |> Enum.map(&String.to_integer/1)
 
     spaces =
       Enum.take_every(tl(list), 2)
-      |> Enum.map(&String.to_integer/1)
       |> Enum.with_index()
 
     data =
       Enum.take_every(list, 2)
-      |> Enum.map(&String.to_integer/1)
       |> Enum.with_index()
       |> Enum.reverse()
       |> Enum.flat_map(fn {size, id} ->
@@ -139,26 +139,66 @@ defmodule AdventOfCode.Day09 do
   end
 
   def part2(args) do
-    args
-    |> String.trim()
-    |> String.graphemes()
-    |> Enum.map(&String.to_integer/1)
-    |> Enum.chunk_every(2, 2)
-    |> Enum.with_index()
-    # |> IO.inspect()
-    |> Enum.reduce({{_files = %{}, _spaces = []}, _block_index = 0}, fn {[file_size, space_size],
-                                                                         file_id},
-                                                                        {{files, spaces},
-                                                                         block_index} ->
-      # {block, space} = {String.to_integer(block_str), String.to_integer(space_str)}
-      new_files =
-        Map.update(files, file_size, {file_id, block_index}, fn list ->
-          [{file_id, block_index} | list]
-        end)
+    {{files, spaces}, _max_index} =
+      args
+      |> String.trim()
+      |> String.graphemes()
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.chunk_every(2, 2, [0])
+      |> Enum.with_index()
+      |> Enum.reduce({{_files = %{}, _spaces = []}, _block_index = 0}, fn {[
+                                                                             file_size,
+                                                                             space_size
+                                                                           ], file_id},
+                                                                          {{files, spaces},
+                                                                           block_index} ->
+        # {block, space} = {String.to_integer(block_str), String.to_integer(space_str)}
+        new_files =
+          Map.update(files, file_size, [{file_id, block_index}], fn list ->
+            [{file_id, block_index} | list]
+          end)
 
-      new_block_index = block_index + file_size
-      new_spaces = [{space_size, new_block_index} | spaces]
-      {{new_files, new_spaces}, new_block_index + file_size}
-    end)
+        new_block_index = block_index + file_size
+        new_spaces = [{space_size, new_block_index} | spaces]
+        {{new_files, new_spaces}, new_block_index + file_size}
+      end)
+      |> IO.inspect()
+
+    # Loop through spaces finding files that fit
+    # What follows is an absolute mess that I did not finish.
+    # I also hate the style
+    Enum.reduce(
+      spaces |> Enum.reverse(),
+      {_filled_spaces = [], files, _unplaced_blocks = []},
+      fn {space_size, space_index}, {filled_spaces, files, unplaced_blocks} ->
+        # find the key for group of files with the rightmost file that fits (files grouped by size)
+        {key, _} =
+          Enum.reduce(files, {nil, 0}, fn {file_size, files}, {key, old_index} ->
+            IO.inspect({file_size, space_size, space_index, files}, label: "WHERE?")
+
+            if file_size > space_size or files == [] do
+              # No suitable piece in this group
+              {key, old_index}
+            else
+              {_new_id, new_index} = hd(files)
+
+              if new_index > old_index do
+                {file_size, new_index}
+              else
+                {key, old_index}
+              end
+            end
+          end)
+          |> IO.inspect()
+
+        if key == nil do
+          {filled_spaces, files, unplaced_blocks}
+        else
+          # [{file_id, block_index} | rest] = Map.get(files, key)
+          # new_files = Map.put(files, key, rest)
+          # {filled_spaces, rest, unplaced_blocks}
+        end
+      end
+    )
   end
 end

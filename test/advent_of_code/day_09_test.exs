@@ -2,7 +2,7 @@ defmodule AdventOfCode.Day09Test do
   use ExUnit.Case
 
   import AdventOfCode.Day09
-  @tag :skip
+
   test "part1" do
     input = "2333133121414131402"
     result = part1(input)
