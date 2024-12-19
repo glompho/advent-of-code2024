@@ -26,7 +26,7 @@ defmodule AdventOfCode.Day18 do
 
     cond do
       not_legal_cell?(grid, {x, y}, {ex, ey}) or visited[{x, y}] == true ->
-        {:error, "not a legitimate cell"}
+        {:error, "no way through"}
 
       x == ex and y == ey ->
         {score, visited}
@@ -74,15 +74,26 @@ defmodule AdventOfCode.Day18 do
     end
   end
 
+  def parse_input(input) do
+    input
+    |> String.split(["\n", ","], trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.chunk_every(2)
+  end
+
+  def parse_map(input, bytes) do
+    input
+    |> Enum.take(bytes)
+    # |> IO.inspect()
+    |> Enum.map(fn [x, y] -> {{x, y}, "#"} end)
+    |> Map.new()
+  end
+
   def part1(input, ex \\ 70, ey \\ 70, bytes \\ 1024) do
     map =
       input
-      |> String.split(["\n", ","], trim: true)
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk_every(2)
-      |> Enum.take(bytes)
-      |> Enum.map(fn [x, y] -> {{x, y}, "#"} end)
-      |> Map.new()
+      |> parse_input()
+      |> parse_map(bytes)
       |> print_grid(ex, ey)
 
     {score, visited} = path_find(map, {0, 0}, {ex, ey}, 0, %{})
@@ -95,7 +106,48 @@ defmodule AdventOfCode.Day18 do
     score
   end
 
-  def part2(input) do
-    part1(input, 6, 6, 13)
+  def part2_one_step(x, list, ex, ey) do
+    map = parse_map(list, x)
+
+    case path_find(map, {0, 0}, {ex, ey}, 0, %{}) do
+      {:error, _} -> {:blocked, Enum.join(Enum.at(list, x - 1), ",")}
+      {score, _visited} -> {:way_through, score}
+    end
+  end
+
+  def part2_search(x, last_x, list, ex, ey) do
+    interval = abs(last_x - x)
+    # IO.inspect({x, last_x, interval, div(interval, 2)})
+
+    case part2_one_step(x, list, ex, ey) do
+      {:blocked, result} ->
+        # IO.inspect({x, "blocked", result})
+
+        if abs(last_x - x) == 1 do
+          result
+        else
+          new_x = x - div(interval, 2)
+          part2_search(new_x, x, list, ex, ey)
+        end
+
+      {:way_through, _score} ->
+        # IO.inspect({x, "way through"})
+
+        new_x = x + div(interval, 2) + 1
+
+        if abs(last_x - x) == 1 do
+          part2_search(last_x, x, list, ex, ey)
+        else
+          part2_search(new_x, x, list, ex, ey)
+        end
+    end
+  end
+
+  def part2(input, ex \\ 70, ey \\ 70) do
+    list = parse_input(input)
+
+    start_index = div(Enum.count(list), 2) |> IO.inspect()
+
+    part2_search(start_index, 0, list, ex, ey)
   end
 end

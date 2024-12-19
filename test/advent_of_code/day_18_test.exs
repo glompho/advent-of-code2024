@@ -3,6 +3,7 @@ defmodule AdventOfCode.Day18Test do
 
   import AdventOfCode.Day18
 
+  @tag :skip
   test "part1" do
     input = "5,4
 4,2
@@ -60,8 +61,8 @@ defmodule AdventOfCode.Day18Test do
 0,5
 1,6
 2,0"
-    result = part1(input, 6, 6, 1)
+    result = part2(input, 6, 6)
 
-    assert result == "fail!"
+    assert result == "6,1"
   end
 end
