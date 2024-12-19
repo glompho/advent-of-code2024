@@ -12,6 +12,7 @@ defmodule AdventOfCode.Day18 do
       |> IO.puts()
     end
 
+    # this is so it doesn't break |> chains on grid
     grid
   end
 
@@ -109,12 +110,9 @@ defmodule AdventOfCode.Day18 do
 
   def part2_search(x, last_x, list, ex, ey) do
     interval = abs(last_x - x)
-    # IO.inspect({x, last_x, interval, div(interval, 2)})
 
     case part2_one_step(x, list, ex, ey) do
       {:blocked, result} ->
-        # IO.inspect({x, "blocked", result})
-
         if abs(last_x - x) == 1 do
           result
         else
@@ -123,15 +121,8 @@ defmodule AdventOfCode.Day18 do
         end
 
       {:way_through, _score} ->
-        # IO.inspect({x, "way through"})
-
         new_x = x + div(interval, 2) + 1
-
-        if abs(last_x - x) == 1 do
-          part2_search(last_x, x, list, ex, ey)
-        else
-          part2_search(new_x, x, list, ex, ey)
-        end
+        part2_search(new_x, x, list, ex, ey)
     end
   end
 
