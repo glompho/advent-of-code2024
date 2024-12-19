@@ -21,14 +21,12 @@ defmodule AdventOfCode.Day18 do
 
   def path_find(grid, {x, y}, {ex, ey}, score, visited) do
     directions = [{0, 1}, {1, 0}, {0, -1}, {-1, 0}]
-    # IO.inspect({{x, y}, {ex, ey}})
-    # IO.inspect({x, y, x < 0, x >= ex, y < 0, y >= ey, grid[{x, y}] == "#", visited[{x, y}]})
 
     cond do
       not_legal_cell?(grid, {x, y}, {ex, ey}) or visited[{x, y}] == true ->
         {:error, "no way through"}
 
-      x == ex and y == ey ->
+      {x, y} == {ex, ey} ->
         {score, visited}
 
       true ->
@@ -41,20 +39,15 @@ defmodule AdventOfCode.Day18 do
 
             cond do
               not_legal_cell?(grid, {new_x, new_y}, {ex, ey}) ->
-                # IO.inspect("NOT LEGIT")
                 grid
 
               Map.get(grid, {new_x, new_y}, :infinity) > new_score ->
-                # IO.inspect("UPDATE")
                 Map.put(grid, {new_x, new_y}, new_score)
 
               true ->
-                # IO.inspect("FALLBACK")
                 grid
             end
           end)
-
-        # IO.inspect(new_visited, label: "visited")
 
         {{nx, ny}, value} =
           new_grid
@@ -67,8 +60,6 @@ defmodule AdventOfCode.Day18 do
               _ -> value
             end
           end)
-
-        # |> IO.inspect()
 
         path_find(new_grid, {nx, ny}, {ex, ey}, value, new_visited)
     end
@@ -84,7 +75,6 @@ defmodule AdventOfCode.Day18 do
   def parse_map(input, bytes) do
     input
     |> Enum.take(bytes)
-    # |> IO.inspect()
     |> Enum.map(fn [x, y] -> {{x, y}, "#"} end)
     |> Map.new()
   end
@@ -94,14 +84,16 @@ defmodule AdventOfCode.Day18 do
       input
       |> parse_input()
       |> parse_map(bytes)
-      |> print_grid(ex, ey)
+
+    # |> print_grid(ex, ey)
 
     {score, visited} = path_find(map, {0, 0}, {ex, ey}, 0, %{})
 
-    Enum.reduce(visited, map, fn {{x, y}, value}, map ->
+    Enum.reduce(visited, map, fn {{x, y}, _value}, map ->
       Map.put(map, {x, y}, "X")
     end)
-    |> print_grid(ex, ey)
+
+    # |> print_grid(ex, ey)
 
     score
   end
@@ -145,9 +137,7 @@ defmodule AdventOfCode.Day18 do
 
   def part2(input, ex \\ 70, ey \\ 70) do
     list = parse_input(input)
-
-    start_index = div(Enum.count(list), 2) |> IO.inspect()
-
+    start_index = div(Enum.count(list), 2)
     part2_search(start_index, 0, list, ex, ey)
   end
 end
