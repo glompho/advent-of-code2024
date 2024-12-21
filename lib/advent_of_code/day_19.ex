@@ -27,14 +27,16 @@ defmodule AdventOfCode.Day19 do
     end
   end
 
-  def part2(args) do
-    [pattern_string, designs] = String.split(args, "\n\n", trim: true)
+  def parse(args) do
+    [pattern_string | designs] = String.split(args, "\n", trim: true)
+    patterns = String.split(pattern_string, ", ", trim: true)
+    {patterns, designs}
+  end
 
-    patterns =
-      String.split(pattern_string, ", ", trim: true)
+  def part2(args) do
+    {patterns, designs} = parse(args)
 
     designs
-    |> String.split("\n", trim: true)
     |> Enum.reduce({0, %{}}, fn design, {count, cache} ->
       {ways, cache} = check_patern(design, patterns, patterns, cache)
       {count + ways, cache}
@@ -43,13 +45,9 @@ defmodule AdventOfCode.Day19 do
   end
 
   def part1(args) do
-    [pattern_string, designs] = String.split(args, "\n\n", trim: true)
-
-    patterns =
-      String.split(pattern_string, ", ", trim: true)
+    {patterns, designs} = parse(args)
 
     designs
-    |> String.split("\n", trim: true)
     |> Enum.reduce({0, %{}}, fn design, {count, cache} ->
       case check_patern(design, patterns, patterns, cache) do
         {0, cache} -> {count, cache}
