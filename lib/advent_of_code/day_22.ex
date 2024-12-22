@@ -37,10 +37,15 @@ defmodule AdventOfCode.Day22 do
     |> Enum.map(fn [a, b] -> {b, b - a} end)
   end
 
-  def part1(args) do
+  def parse(args) do
     args
     |> String.split("\n", trim: true)
     |> Enum.map(&String.to_integer/1)
+  end
+
+  def part1(args) do
+    args
+    |> parse()
     |> Enum.map(fn n ->
       Stream.iterate(n, &one_step/1)
       |> Enum.at(2000)
@@ -51,10 +56,9 @@ defmodule AdventOfCode.Day22 do
   def part2(args) do
     possible_sales =
       args
-      |> String.split("\n", trim: true)
-      |> Enum.map(&String.to_integer/1)
+      |> parse()
       |> Enum.map(fn n ->
-        Stream.iterate(n, fn n -> one_step(n) end)
+        Stream.iterate(n, &one_step/1)
         |> Enum.slice(0, 2001)
         |> Enum.map(&get_ones/1)
         |> differences()
@@ -77,9 +81,9 @@ defmodule AdventOfCode.Day22 do
           Map.get(sale_map, key, 0)
         end)
 
-      {key, totals, totals |> Enum.sum()}
+      {key, totals |> Enum.sum()}
     end)
-    |> Enum.max_by(fn {_key, _totals, value} -> value end)
-    |> elem(2)
+    |> Enum.max_by(fn {_key, value} -> value end)
+    |> elem(1)
   end
 end
