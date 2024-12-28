@@ -15,15 +15,15 @@ defmodule AdventOfCode.Day12 do
     end)
   end
 
-  def is_corner({_x, _y}, grid_map) do
-    [{0, 1}, {1, 1}, {1, 0}]
-    |> Enum.map(&Map.get(grid_map, &1))
-  end
-
-  def crawl({x, y}, char, grid_map, area, edges) do
+  def crawl({x, y}, {dx, dy}, char, grid_map, area, edges) do
     cond do
       grid_map[{x, y}] != char ->
-        {area, [{x, y} | edges]}
+        case {dx, dy} do
+          {0, 1} -> {area, [{x, y, :t_edge} | edges]}
+          {0, -1} -> {area, [{x, y, :b_edge} | edges]}
+          {1, 0} -> {area, [{x, y, :l_edge} | edges]}
+          {-1, 0} -> {area, [{x, y, :r_edge} | edges]}
+        end
 
       Enum.member?(area, {x, y}) == true or Enum.member?(edges, {x, y}) == true ->
         {area, edges}
@@ -31,7 +31,7 @@ defmodule AdventOfCode.Day12 do
       true ->
         [{0, 1}, {0, -1}, {1, 0}, {-1, 0}]
         |> Enum.reduce({[{x, y} | area], edges}, fn {dx, dy}, {narea, nedges} ->
-          crawl({x + dx, y + dy}, char, grid_map, narea, nedges)
+          crawl({x + dx, y + dy}, {dx, dy}, char, grid_map, narea, nedges)
         end)
     end
   end
@@ -47,7 +47,7 @@ defmodule AdventOfCode.Day12 do
       if Enum.member?(seen_list, {x, y}) do
         {seen_map, seen_list}
       else
-        {area, edge} = crawl({x, y}, char, grid_map, [], [])
+        {area, edge} = crawl({x, y}, {0, 0}, char, grid_map, [], [])
 
         {Map.put(seen_map, {{x, y}, char}, {area, edge}),
          MapSet.union(MapSet.new(area), seen_list)}
@@ -66,56 +66,36 @@ defmodule AdventOfCode.Day12 do
     |> Enum.sum()
   end
 
-  def find_edge(edges, {x, y}, {dx, dy}) do
-    if Enum.member?(edges, {x, y}) do
-      remaining_edges = edges -- [{x, y}]
-      lh = find_edge(remaining_edges, {x - dx, y - dy}, {dx, dy})
-      rh = find_edge(remaining_edges, {x + dx, y + dy}, {dx, dy})
-      [{x, y}] ++ lh ++ rh
-    else
-      []
-    end
-  end
+  def count_all_sides(edges) do
+    edges
+    |> Enum.group_by(fn {_x, _y, type} -> type end)
+    |> Enum.map(fn {type, sides} ->
+      case type do
+        :t_edge -> {type, sides}
+        :b_edge -> {type, sides}
+        :l_edge -> {type, Enum.map(sides, fn {x, y, type} -> {y, x, type} end)}
+        :r_edge -> {type, Enum.map(sides, fn {x, y, type} -> {y, x, type} end)}
+      end
+    end)
+    |> Enum.map(fn {_type, sides} ->
+      # converted all cases to horizontal above so that this logic is the same for all.
+      sides
+      |> Enum.group_by(fn {_x, y, _type} -> y end, fn {x, _y, _type} -> x end)
+      |> Map.values()
+      |> Enum.map(fn x_values ->
+        x_values
+        |> Enum.sort()
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.map(fn [a, b] -> abs(a - b) end)
+        |> Enum.filter(fn x -> x != 1 end)
+        |> Enum.count()
+        |> then(&(&1 + 1))
+      end)
+      |> Enum.sum()
+    end)
 
-  def find_edges([{x, y} | _rest] = edges, {dx, dy}, acc) do
-    edge = find_edge(edges, {x, y}, {dx, dy})
-    # IO.inspect(edges, label: "before")
-    # IO.inspect(edge, lebel: "edge")
-    # IO.inspect(edges -- edge, label: "after")
-    # IO.inspect(edge, label: "{x,y} goes to edge")
-    find_edges(edges -- edge, {dx, dy}, acc ++ [edge])
-  end
-
-  def find_edges([], {_dx, _dy}, acc) do
-    acc
-  end
-
-  def count_sides(edges) do
-    # IO.inspect(edges)
-    # IO.inspect(edges |> Enum.uniq())
-
-    fp =
-      find_edges(edges, {1, 0}, [])
-
-    # |> IO.inspect(label: "hedges")
-
-    vedges =
-      fp
-      |> Enum.filter(&(length(&1) == 1))
-      |> Enum.map(fn [{x, y}] -> {x, y} end)
-      |> find_edges({0, 1}, [])
-
-    # |> find_edges({0, 1}, [])
-    # |> Enum.uniq()
-    # |> IO.inspect(label: "vedges")
-
-    hedges =
-      fp
-      |> Enum.filter(&(length(&1) != 1))
-
-    (vedges ++ hedges)
-    # |> IO.inspect(label: "both")
-    |> Enum.count()
+    # |> IO.inspect(charlists: :as_list)
+    |> Enum.sum()
   end
 
   def part2(input) do
@@ -123,10 +103,10 @@ defmodule AdventOfCode.Day12 do
 
     regions
     |> elem(0)
-    |> Enum.map(fn {_name, {area, edges}} ->
-      sides = count_sides(edges)
-      # IO.inspect({name, sides})
-
+    |> Enum.map(fn {name, {area, edges}} ->
+      # IO.inspect(name)
+      sides = count_all_sides(edges)
+      # IO.inspect({name, sides, Enum.count(area) * sides})
       Enum.count(area) * sides
     end)
     |> Enum.sum()

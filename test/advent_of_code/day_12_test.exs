@@ -52,4 +52,28 @@ EEEEE"
 
     assert result == 236
   end
+
+  @tag :skip
+  test "part2 larger" do
+    input = "AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA"
+    result = part2(input)
+
+    assert result == 368
+  end
+
+  test "part2 max test" do
+    input = "
+CCAAA
+CCAAA
+AABBA
+AAAAA"
+    result = part2(input)
+
+    assert result == 164
+  end
 end
