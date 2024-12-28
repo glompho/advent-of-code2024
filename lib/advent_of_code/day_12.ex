@@ -103,7 +103,7 @@ defmodule AdventOfCode.Day12 do
 
     regions
     |> elem(0)
-    |> Enum.map(fn {name, {area, edges}} ->
+    |> Enum.map(fn {_name, {area, edges}} ->
       # IO.inspect(name)
       sides = count_all_sides(edges)
       # IO.inspect({name, sides, Enum.count(area) * sides})

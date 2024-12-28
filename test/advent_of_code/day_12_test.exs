@@ -30,7 +30,6 @@ MMMISSJEEE"
     assert result == 1930
   end
 
-  @tag :skip
   test "part2" do
     input = "AAAA
 BBCD
@@ -41,7 +40,6 @@ EEEC"
     assert result == 80
   end
 
-  @tag :skip
   test "part2_2" do
     input = "EEEEE
 EXXXX
@@ -53,7 +51,6 @@ EEEEE"
     assert result == 236
   end
 
-  @tag :skip
   test "part2 larger" do
     input = "AAAAAA
 AAABBA
